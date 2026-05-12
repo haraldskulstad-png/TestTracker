@@ -1102,7 +1102,11 @@ function renderIndivid(){
       } else if(rawV&&(test==='Stillelengde'||test==='40-meter')){const f=sf(rawV);if(f)dv=f.toFixed(2);}
       const bdc=bDev>0?'var(--up)':bDev<0?'var(--down)':'var(--b400)';
       const kgDiv=kg?`<div class="pkg" style="${bDev!=null&&bDev!==0?'color:'+bdc:''}">${kg}kg${bDevStr?' ('+bDevStr+')':''}</div>`:'';
-      h+=`<div class="pcell"><div class="plbl">${sP(p)}</div><div class="pval ${rawV?(isBest?'best':''):'empty'}">${dv||'—'}</div>${kgDiv}</div>`;
+      // Show rocket if this period is the progression winner period for this test
+      const _pp=PROGRESSION_PAIRS[kull];
+      const _isCurrPer=_pp&&p===_pp.curr;
+      const cellRocket=(_isCurrPer&&isRocket&&rawV)?'<span style="font-size:.75rem;line-height:1;display:block;text-align:center;margin-top:1px" title="🚀 Årets fremgang!">🚀</span>':'';
+      h+=`<div class="pcell"><div class="plbl">${sP(p)}</div><div class="pval ${rawV?(isBest?'best':''):'empty'}">${dv||'—'}${cellRocket}</div>${kgDiv}</div>`;
     });
     h+=`</div></div>`;
   });
@@ -3144,6 +3148,36 @@ function renderHomeFremgang() {
   const TESTS_SHOW = ['Beep','Løp','Stillelengde','40-meter','Benk','Pull-ups','Kroppshev i bom','Hangups m/strikk'];
   const ICONS = {Beep:'📡',Løp:'🏃',Stillelengde:'📏','40-meter':'⚡',Benk:'💪',
     'Pull-ups':'🔝','Kroppshev i bom':'🤸','Hangups m/strikk':'🔝'};
+
+  // Collect all winners to detect duplicate first names
+  const allWinners = [];
+  TESTS_SHOW.forEach(test => {
+    ['G','J'].forEach(kj => {
+      const w = prog[test]?.[kj];
+      if(w) allWinners.push({...w, test, kj});
+    });
+  });
+
+  // Count first names across all winners
+  const firstNameCount = {};
+  allWinners.forEach(w => {
+    const fn = w.navn.split(' ')[0];
+    firstNameCount[fn] = (firstNameCount[fn] || 0) + 1;
+  });
+
+  // Build display name: fornavn (kull), add etternavn initial if duplicate
+  function displayName(w) {
+    const parts = w.navn.split(' ');
+    const fornavn = parts[0];
+    const etternavn = parts[parts.length - 1];
+    const hasDupe = firstNameCount[fornavn] > 1;
+    // Short kull label: 2023-26 → VG3, 2024-27 → VG2, 2025-28 → VG1
+    const vg = w.kull === '2023-26' ? 'VG3' : w.kull === '2024-27' ? 'VG2' : 'VG1';
+    return hasDupe
+      ? `${fornavn} ${etternavn[0]}. (${vg})`
+      : `${fornavn} (${vg})`;
+  }
+
   let html = '';
   TESTS_SHOW.forEach(test => {
     ['G','J'].forEach(kj => {
@@ -3151,7 +3185,7 @@ function renderHomeFremgang() {
       if(!w) return;
       const gColor = kj==='G' ? 'var(--b400)' : '#f472b6';
       const kji = kj==='G' ? '♂' : '♀';
-      const etternavn = w.navn.split(' ').slice(-1)[0];
+      const dName = displayName(w);
       html += `<div style="background:var(--b800);border:1px solid var(--b600);
         border-radius:10px;padding:.55rem .75rem;display:flex;flex-direction:column;gap:.2rem">
         <div style="display:flex;align-items:center;gap:.3rem;font-size:.72rem;color:var(--muted)">
@@ -3159,7 +3193,7 @@ function renderHomeFremgang() {
           <span style="color:${gColor};margin-left:auto">${kji}</span>
         </div>
         <div style="font-size:.88rem;font-weight:600;color:var(--b100)">
-          🚀 ${etternavn}
+          🚀 ${dName}
         </div>
         <div style="font-size:.7rem;font-family:'JetBrains Mono',monospace;color:var(--b400)">
           ${w.prev} → ${w.curr}
