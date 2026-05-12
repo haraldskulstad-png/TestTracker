@@ -831,7 +831,14 @@ function switchRegTab(t){
   if(t==='edit')editInit();
   if(t==='faggruppe'){fgInitKullSel();const k=document.getElementById('fg-kull')?.value;if(k)fgLoadKull();}
   if(t==='dnf'){const k=document.getElementById('dnf-kull')?.value;if(k)dnfLoadKull();}
-  if(t==='testdag')initTestDag();
+  if(t==='testdag'){
+    initTestDag();
+    // Rebuild lists in case DNF status changed since last visit
+    const tdOev=document.getElementById('td-sta-oev')?.value;
+    if(tdOev) tdBuildSta();
+    const tdKull=document.getElementById('td-kull-sel')?.value;
+    if(tdKull) tdBuildKull();
+  }
 }
 function switchKTab(t){
   document.querySelectorAll('#kul-tabs .tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
@@ -2240,6 +2247,14 @@ function toggleDNF(kull, navn, active) {
   // Update count badge
   const badge = document.getElementById('dnf-count-' + kull.replace('-',''));
   if (badge) badge.textContent = d[kull]?.length || 0;
+  // Live-update testdag lists if they're already built
+  const tdOev = document.getElementById('td-sta-oev')?.value;
+  if (tdOev) tdBuildSta();
+  const tdKull = document.getElementById('td-kull-sel')?.value;
+  if (tdKull) tdBuildKull();
+  // Also remove from reg-elev dropdown if present
+  const regKull = document.getElementById('r-kull')?.value;
+  if (regKull === kull) onRKull();
 }
 
 function dnfLoadKull() {
