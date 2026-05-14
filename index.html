@@ -933,8 +933,8 @@ function renderKlasse(){
   let periods,allS;
   if(kull==='__alle__'){
     const all=allKD();const ps=new Set();Object.values(all).forEach(kd=>kd.periods.forEach(p=>ps.add(p)));
-    periods=APRD.filter(p=>ps.has(p));allS=[];Object.entries(all).forEach(([k,kd])=>Object.values(kd.students).forEach(s=>allS.push({...s,_kull:k})));
-  } else {const kd=getMD(kull);periods=kd.periods;allS=Object.values(kd.students)}
+    periods=APRD.filter(p=>ps.has(p));allS=[];Object.entries(all).forEach(([k,kd])=>Object.values(kd.students).forEach(s=>{if(!isDNF(k,s.navn))allS.push({...s,_kull:k});}));
+  } else {const kd=getMD(kull);periods=kd.periods;allS=Object.values(kd.students).filter(s=>!isDNF(kull,s.navn))}
   const students=fS(allS);
   const total=students.length,boys=students.filter(s=>s.kjønn==='G').length,girls=students.filter(s=>s.kjønn==='J').length;
   srow.innerHTML=`<div class="stat-card"><div class="stat-label">Utøvere</div><div class="stat-value">${total}</div><div class="stat-sub">${boys}G / ${girls}J</div></div>
@@ -996,10 +996,20 @@ function buildKT(periods,students,splitRun,kullCtx){
   h+=`</tbody></table></div>`;
   h+=`<div style="margin-top:2rem"><div class="stitle">Elever — siste resultat</div><div class="tw"><table>
     <thead><tr><th>#</th><th>Elev</th><th>K</th><th>Beep</th><th>Løp</th><th>Stil.</th><th>40m</th><th>Benk</th><th>Pull-ups</th><th>Kroppshev</th><th>Periode</th></tr></thead><tbody>`;
-  [...students].sort((a,b)=>(a.nr||0)-(b.nr||0)).forEach(s=>{
+  [...students].filter(s=>{
+    const _sk2=s._kull||(kullCtx&&kullCtx!=='__alle__'?kullCtx:Object.keys(allKD()).find(k=>allKD()[k].students[s.navn]));
+    return !_sk2||!isDNF(_sk2,s.navn);
+  }).sort((a,b)=>(a.nr||0)-(b.nr||0)).forEach(s=>{
     const allP=Object.keys(s.perioder||{});
-    const lastP=[...periods,...allP].filter(p=>allP.includes(p)).reverse()
-      .find(p=>s.perioder[p]&&Object.values(s.perioder[p]).some(v=>v&&v!=='2000m'&&v!=='3000m'));
+    // Active kulls always show current Vår 2026 period; others show last period with data
+    const ACTIVE_CURR={'2023-26':'Vår VG3','2024-27':'Vår VG2','2025-28':'Vår VG1'};
+    const REAL_FIELDS=['Beep','Løp','Stillelengde','40-meter','Benk','BenkKg','Hangup','Kroppshev','HangupStrikk'];
+    const _sk=s._kull||(kullCtx&&kullCtx!=='__alle__'?kullCtx:Object.keys(allKD()).find(k=>allKD()[k].students[s.navn]));
+    const _currPer=ACTIVE_CURR[_sk];
+    const lastP=(_currPer&&allP.includes(_currPer))
+      ? _currPer
+      : APRD.filter(p=>allP.includes(p)).reverse()
+          .find(p=>REAL_FIELDS.some(f=>{const v=s.perioder[p]?.[f];return v&&v!==''&&v!==null;}));
     const d=lastP&&s.perioder?s.perioder[lastP]:{};
     const kj=s.kjønn==='G'?`<span style="color:var(--b400)">♂</span>`:`<span style="color:#f472b6">♀</span>`;
   const _k=s._kull||(kullCtx&&kullCtx!=='__alle__'?kullCtx:Object.keys(allKD()).find(k=>allKD()[k].students[s.navn]));
