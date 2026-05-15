@@ -891,7 +891,8 @@ function switchRegTab(t){
 function switchKTab(t){
   document.querySelectorAll('#kul-tabs .tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
   document.querySelectorAll('#k-body .tc').forEach(c=>c.classList.toggle('active',c.id===`kt-${t}`));
-  if(t==='grafer')renderKCharts();
+  if(t==='grafer') renderKCharts();
+  if(t==='oevelse') initOevelseTab();
 }
 function toast(msg,ok=true){
   const t=document.getElementById('toast');t.textContent=msg;
@@ -951,9 +952,11 @@ function renderKlasse(){
   body.innerHTML=`<div class="tabs" id="kul-tabs">
     <button class="tab active" data-tab="tabell" onclick="switchKTab('tabell')">Klassetabell</button>
     <button class="tab" data-tab="grafer" onclick="switchKTab('grafer')">Grafer</button>
+    <button class="tab" data-tab="oevelse" onclick="switchKTab('oevelse')">📊 Øvelse</button>
   </div>
   <div id="kt-tabell" class="tc active">${buildKT(periods,students,kull==='__alle__',kull)}</div>
-  <div id="kt-grafer" class="tc"><div class="charts-grid" id="k-charts"></div></div>`;
+  <div id="kt-grafer" class="tc"><div class="charts-grid" id="k-charts"></div></div>
+  <div id="kt-oevelse" class="tc"><div id="kt-oev-filters" style="display:flex;flex-wrap:wrap;gap:.8rem;margin-bottom:1.2rem"></div><div id="kt-oev-result"></div></div>`;
 }
 function cAvg(periods,students,splitRun){
   const runKeys=splitRun?['Løp 2000m','Løp 3000m']:['Løp'];
@@ -4002,6 +4005,191 @@ function renderTestdagSeason() {
   cont.innerHTML=html;
 }
 
+
+// ═══════════════════════════════════════════════════════════════
+// ØVELSE-FANE — ranked cross-kull filter by exercise
+// ═══════════════════════════════════════════════════════════════
+const OEV_DEFS = [
+  {key:'Beep',       lbl:'Beep',             icon:'📡',
+   fn:(pd)=>{const t=beepToTotal(pd.Beep);return t?{v:t,disp:pd.Beep}:null;}, lower:false},
+  {key:'Lop3000',    lbl:'Løp 3000m',        icon:'🏃',
+   fn:(pd)=>pd.Løp&&pd.LøpTest==='3000m'?{v:r2s(pd.Løp),disp:pd.Løp}:null, lower:true},
+  {key:'Lop2000',    lbl:'Løp 2000m',        icon:'🏃',
+   fn:(pd)=>pd.Løp&&pd.LøpTest==='2000m'?{v:r2s(pd.Løp),disp:pd.Løp}:null, lower:true},
+  {key:'Stillelengde',lbl:'Stillelengde',    icon:'📏',
+   fn:(pd)=>{const v=parseFloat(pd.Stillelengde);return v>0?{v,disp:v.toFixed(2)+' m'}:null;}, lower:false},
+  {key:'40m',        lbl:'40-meter',         icon:'⚡',
+   fn:(pd)=>{const v=parseFloat(pd['40-meter']);return(v>3&&v<15)?{v,disp:v+' s'}:null;}, lower:true},
+  {key:'Benk',       lbl:'Benkpress (reps)', icon:'💪',
+   fn:(pd)=>{const v=parseInt(pd.Benk);return(!isNaN(v)&&v>0)?{v,disp:v+' reps'}:null;}, lower:false},
+  {key:'BenkKg',     lbl:'Benkpress (kg)',   icon:'💪',
+   fn:(pd)=>{const v=parseInt(pd.BenkKg);return(!isNaN(v)&&v>0)?{v,disp:v+' kg'}:null;}, lower:false},
+  {key:'Pullups',    lbl:'Pull-ups',         icon:'🔝',
+   fn:(pd)=>{const v=parseFloat(pd.Hangup);return(v>0)?{v,disp:v+' reps'}:null;}, lower:false},
+  {key:'Kroppshev',  lbl:'Kroppshev i bom',  icon:'🤸',
+   fn:(pd)=>{const v=parseFloat(pd.Kroppshev);return(v>0)?{v,disp:v+' reps'}:null;}, lower:false},
+  {key:'Strikk',     lbl:'H.ups m/strikk',  icon:'🔝',
+   fn:(pd)=>{const v=parseFloat(pd.HangupStrikk);return(v>0)?{v,disp:v+' reps'}:null;}, lower:false},
+];
+
+// State
+let _oevState = {oev:'Beep', kj:'alle', vg:'alle', sesong:'alle'};
+
+function initOevelseTab() {
+  buildOevelseFilters();
+  renderOevelseResults();
+}
+
+function buildOevelseFilters() {
+  const cont = document.getElementById('kt-oev-filters');
+  if(!cont) return;
+
+  const sel = (id, label, opts, cur, onChange) => {
+    const gColor = {'♂ Gutter':'var(--b400)','♀ Jenter':'#f472b6'};
+    return `<div style="display:flex;flex-direction:column;gap:.3rem">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--b400);
+        letter-spacing:1px;text-transform:uppercase">${label}</div>
+      <select class="fi" style="min-width:${id==='oev'?'180px':'120px'}"
+        onchange="${onChange}(this.value)" id="oev-f-${id}">
+        ${opts.map(([v,l])=>`<option value="${v}"${v===cur?' selected':''}>${l}</option>`).join('')}
+      </select>
+    </div>`;
+  };
+
+  cont.innerHTML =
+    sel('oev','Øvelse',
+      OEV_DEFS.map(d=>[d.key,d.icon+' '+d.lbl]),
+      _oevState.oev, 'setOevFilter_oev') +
+    sel('kj','Kjønn',
+      [['alle','Alle'],['G','♂ Gutter'],['J','♀ Jenter']],
+      _oevState.kj, 'setOevFilter_kj') +
+    sel('vg','VG-trinn',
+      [['alle','Alle trinn'],['VG1','VG1'],['VG2','VG2'],['VG3','VG3']],
+      _oevState.vg, 'setOevFilter_vg') +
+    sel('sesong','Sesong',
+      [['alle','Alle'],['Høst','Høst'],['Vår','Vår']],
+      _oevState.sesong, 'setOevFilter_sesong');
+}
+
+function setOevFilter_oev(v){_oevState.oev=v;renderOevelseResults();}
+function setOevFilter_kj(v){_oevState.kj=v;renderOevelseResults();}
+function setOevFilter_vg(v){_oevState.vg=v;renderOevelseResults();}
+function setOevFilter_sesong(v){_oevState.sesong=v;renderOevelseResults();}
+
+function renderOevelseResults() {
+  const cont = document.getElementById('kt-oev-result');
+  if(!cont) return;
+
+  const def = OEV_DEFS.find(d=>d.key===_oevState.oev);
+  if(!def) return;
+
+  // Collect all matching results across all kulls
+  const rows = [];
+  Object.keys(allKD()).forEach(kull => {
+    const kd = getMD(kull);
+    Object.values(kd.students).forEach(s => {
+      if(isDNF(kull, s.navn)) return;
+      if(_oevState.kj !== 'alle' && s.kjønn !== _oevState.kj) return;
+
+      Object.entries(s.perioder||{}).forEach(([per, pd]) => {
+        if(!pd) return;
+
+        // VG filter
+        if(_oevState.vg !== 'alle') {
+          const vgMatch = per.match(/VG(\d)/);
+          if(!vgMatch || 'VG'+vgMatch[1] !== _oevState.vg) return;
+        }
+
+        // Sesong filter
+        if(_oevState.sesong !== 'alle') {
+          if(!per.startsWith(_oevState.sesong)) return;
+        }
+
+        const res = def.fn(pd);
+        if(!res) return;
+
+        const vg = per.match(/VG(\d)/)?.[1] || '?';
+        const sesong = per.startsWith('Høst') ? 'H' : 'V';
+        rows.push({
+          navn: s.navn, kull, kj: s.kjønn, per,
+          vg: 'VG'+vg, sesong, v: res.v, disp: res.disp
+        });
+      });
+    });
+  });
+
+  if(!rows.length) {
+    cont.innerHTML = '<p class="no-data">Ingen resultater matcher valgt filter.</p>';
+    return;
+  }
+
+  // Sort: best first
+  rows.sort((a,b) => def.lower ? a.v-b.v : b.v-a.v);
+
+  // Build table
+  const gColor = kj => kj==='G' ? 'var(--b400)' : '#f472b6';
+  const kji = kj => kj==='G' ? '♂' : '♀';
+
+  // Year from kull: 2023-26 VG1 = started 2023, VG1 period = 2023/24
+  // Simple: show kull as-is, period label
+  let html = `<div style="font-family:'JetBrains Mono',monospace;font-size:.72rem;
+    color:var(--muted);margin-bottom:.6rem">
+    ${rows.length} resultater · ${def.icon} ${def.lbl}
+    ${_oevState.kj!=='alle'?'· '+(kji(_oevState.kj)+' '+(_oevState.kj==='G'?'Gutter':'Jenter')):''}
+    ${_oevState.vg!=='alle'?'· '+_oevState.vg:''}
+    ${_oevState.sesong!=='alle'?'· '+_oevState.sesong:''}
+  </div>`;
+
+  html += `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.88rem">
+    <thead><tr>
+      <th style="text-align:center;padding:4px 8px;background:var(--b800);border:1px solid var(--b600);
+        color:var(--muted);font-weight:400;font-size:.72rem;width:40px">#</th>
+      <th style="text-align:left;padding:4px 10px;background:var(--b800);border:1px solid var(--b600);
+        color:var(--b300);font-size:.75rem">Elev</th>
+      <th style="text-align:center;padding:4px 8px;background:var(--b800);border:1px solid var(--b600);
+        color:var(--b300);font-size:.75rem">Kull</th>
+      <th style="text-align:center;padding:4px 8px;background:var(--b800);border:1px solid var(--b600);
+        color:var(--b300);font-size:.75rem">Trinn</th>
+      <th style="text-align:center;padding:4px 8px;background:var(--b800);border:1px solid var(--b600);
+        color:var(--b300);font-size:.75rem">Sesong</th>
+      <th style="text-align:center;padding:4px 8px;background:var(--b800);border:1px solid var(--b600);
+        color:var(--b400);font-weight:700;font-size:.75rem">${def.icon} Resultat</th>
+    </tr></thead>
+    <tbody>`;
+
+  // Medal thresholds: medal if top 3 per kj in same VG+sesong group (if filtered)
+  // Simple: just show rank medals for top 3 overall
+  rows.forEach((r, i) => {
+    const rank = i+1;
+    const medal = rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':'';
+    const et = r.navn.split(' ').slice(-1)[0];
+    const fn = r.navn.split(' ').slice(0,-1).join(' ');
+    const rowBg = i%2===0 ? 'var(--b900)' : 'rgba(96,150,232,.03)';
+    const isTopRow = rank <= 3;
+    const resultColor = rank===1?'#fbbf24':rank===2?'#94a3b8':rank===3?'#b45309':'var(--b100)';
+
+    html += `<tr style="background:${rowBg}">
+      <td style="text-align:center;padding:5px 8px;border:1px solid var(--b700);
+        color:var(--muted);font-size:.78rem">${medal||rank}</td>
+      <td style="padding:5px 10px;border:1px solid var(--b700)">
+        <span style="font-weight:${isTopRow?'600':'400'};color:var(--b100)">${et},</span>
+        <span style="color:var(--b300);font-size:.85rem"> ${fn}</span>
+        <span style="color:${gColor(r.kj)};font-size:.75rem;margin-left:.3rem">${kji(r.kj)}</span>
+      </td>
+      <td style="text-align:center;padding:5px 8px;border:1px solid var(--b700);
+        font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--b400)">${r.kull}</td>
+      <td style="text-align:center;padding:5px 8px;border:1px solid var(--b700);
+        font-size:.78rem;color:var(--b300)">${r.vg}</td>
+      <td style="text-align:center;padding:5px 8px;border:1px solid var(--b700);
+        font-size:.78rem;color:var(--b300)">${r.sesong}</td>
+      <td style="text-align:center;padding:5px 8px;border:1px solid var(--b700);
+        font-weight:700;color:${resultColor};font-size:.95rem">${r.disp}</td>
+    </tr>`;
+  });
+
+  html += '</tbody></table></div>';
+  cont.innerHTML = html;
+}
 showPage('home');
 </script>
 <div class="toast" id="toast"></div>
