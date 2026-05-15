@@ -4521,7 +4521,11 @@ function renderKarakterfordeling() {
     counts[t.key] = { G:{2:0,3:0,4:0,5:0,6:0}, J:{2:0,3:0,4:0,5:0,6:0} };
   });
   const totals = {};
-  KAR_TESTS.forEach(t => { totals[t.key] = {G:0,J:0}; });
+  const below_scale = {};  // students with results but below lowest grade
+  KAR_TESTS.forEach(t => {
+    totals[t.key] = {G:0,J:0};
+    below_scale[t.key] = {G:0,J:0};
+  });
 
   Object.keys(allKD()).forEach(kull => {
     const kd = getMD(kull);
@@ -4536,9 +4540,23 @@ function renderKarakterfordeling() {
         if(sesFilter!=='alle' && !per.startsWith(sesFilter)) return;
         KAR_TESTS.forEach(t => {
           if(!t.hasScale) return;
+          // Check if student has a result for this test
+          let hasResult = false;
+          if(t.key==='Beep') hasResult = !!(pd.Beep && pd.Beep!=='');
+          else if(t.key==='Lop3000') hasResult = !!(pd.Løp && pd.LøpTest==='3000m');
+          else if(t.key==='Stillelengde') hasResult = !!(pd.Stillelengde && pd.Stillelengde!=='');
+          else if(t.key==='40m') hasResult = !!(pd['40-meter'] && pd['40-meter']!=='');
+          if(!hasResult) return;
           const g = t.grade(pd,kj,vg);
           const sg = gradeToSimple(g);
-          if(sg) { counts[t.key][kj][sg]++; totals[t.key][kj]++; }
+          if(sg) {
+            counts[t.key][kj][sg]++;
+            totals[t.key][kj]++;
+          } else {
+            // Has a result but falls below the lowest grade threshold
+            below_scale[t.key][kj]++;
+            totals[t.key][kj]++;
+          }
         });
       });
     });
@@ -4699,6 +4717,28 @@ function renderKarakterfordeling() {
         </tr>
       </table>
     </div>`;
+
+    // Below-scale row appended after the card if any exist
+    const bsG = below_scale[t.key].G, bsJ = below_scale[t.key].J, bsT = bsG+bsJ;
+    if(bsT > 0) {
+      const pbsG = pct(bsG,nG), pbsJ = pct(bsJ,nJ), pbsT = pct(bsT,nT);
+      html += `<div style="display:flex;align-items:center;gap:.6rem;margin-top:.4rem;
+        padding:.45rem .9rem;border-radius:8px;background:rgba(148,163,184,.05);
+        border:1px solid rgba(148,163,184,.12)">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:.68rem;
+          color:var(--b600);white-space:nowrap">&lt; 2 — utenfor skala</div>
+        <div style="flex:1;height:5px;background:var(--b800);border-radius:3px;overflow:hidden">
+          <div style="height:100%;width:${pbsT}%;background:rgba(148,163,184,.35);border-radius:3px"></div>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:.75rem;
+          color:var(--b500);white-space:nowrap">
+          <span style="color:var(--b400)">♂</span>${bsG}
+          <span style="color:#c084fc;margin-left:.4rem">♀</span>${bsJ}
+          <span style="color:var(--b600);margin-left:.5rem">|</span>
+          <span style="color:var(--b500);margin-left:.4rem">${bsT} (${pbsT}%)</span>
+        </div>
+      </div>`;
+    }
   });
 
   html += '</div>';
