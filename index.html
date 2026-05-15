@@ -4668,7 +4668,52 @@ function renderKarakterfordeling() {
       </tr>`;
     });
 
-    html += `
+      // Append below-scale as last row inside `rows`
+    const bsG = below_scale[t.key].G, bsJ = below_scale[t.key].J, bsT = bsG+bsJ;
+    if(bsT > 0) {
+      const pbsG = pct(bsG,nG), pbsJ = pct(bsJ,nJ), pbsT = pct(bsT,nT);
+      rows += `
+      <tr style="opacity:.55">
+        <td style="padding:5px 10px 5px 0;width:36px">
+          <div style="width:32px;height:28px;border-radius:6px;
+            background:rgba(148,163,184,.07);border:1px dashed rgba(148,163,184,.2);
+            display:flex;align-items:center;justify-content:center;
+            font-size:.68rem;color:var(--b600);font-family:'JetBrains Mono',monospace
+            ">&lt;2</div>
+        </td>
+        <td style="padding:5px 6px;width:130px">
+          <div style="display:flex;align-items:center;gap:6px">
+            <div style="flex:1;height:4px;background:var(--b800);border-radius:3px;overflow:hidden">
+              <div style="height:100%;width:${pbsG}%;background:rgba(148,163,184,.3);border-radius:3px"></div>
+            </div>
+            <span style="font-size:.78rem;color:var(--b600);width:28px;text-align:right;
+              font-family:'JetBrains Mono',monospace">${bsG>0?bsG:''}</span>
+            <span style="font-size:.7rem;color:var(--b700);width:34px;font-family:'JetBrains Mono',monospace">
+              ${bsG>0?pbsG+'%':''}</span>
+          </div>
+        </td>
+        <td style="padding:5px 6px;width:130px">
+          <div style="display:flex;align-items:center;gap:6px">
+            <div style="flex:1;height:4px;background:var(--b800);border-radius:3px;overflow:hidden">
+              <div style="height:100%;width:${pbsJ}%;background:rgba(244,114,182,.25);border-radius:3px"></div>
+            </div>
+            <span style="font-size:.78rem;color:var(--b600);width:28px;text-align:right;
+              font-family:'JetBrains Mono',monospace">${bsJ>0?bsJ:''}</span>
+            <span style="font-size:.7rem;color:var(--b700);width:34px;font-family:'JetBrains Mono',monospace">
+              ${bsJ>0?pbsJ+'%':''}</span>
+          </div>
+        </td>
+        <td style="padding:5px 6px 5px 10px;border-left:1px solid var(--b800)">
+          <span style="font-size:.78rem;color:var(--b600);font-family:'JetBrains Mono',monospace">
+            ${bsT}
+          </span>
+          <span style="font-size:.7rem;color:var(--b700);margin-left:4px;
+            font-family:'JetBrains Mono',monospace">${pbsT}%</span>
+        </td>
+      </tr>`;
+    }
+
+  html += `
     <div style="background:var(--b800);border:1px solid var(--b600);border-radius:14px;
       padding:1.1rem 1.3rem;overflow:hidden">
 
@@ -4718,27 +4763,7 @@ function renderKarakterfordeling() {
       </table>
     </div>`;
 
-    // Below-scale row appended after the card if any exist
-    const bsG = below_scale[t.key].G, bsJ = below_scale[t.key].J, bsT = bsG+bsJ;
-    if(bsT > 0) {
-      const pbsG = pct(bsG,nG), pbsJ = pct(bsJ,nJ), pbsT = pct(bsT,nT);
-      html += `<div style="display:flex;align-items:center;gap:.6rem;margin-top:.4rem;
-        padding:.45rem .9rem;border-radius:8px;background:rgba(148,163,184,.05);
-        border:1px solid rgba(148,163,184,.12)">
-        <div style="font-family:'JetBrains Mono',monospace;font-size:.68rem;
-          color:var(--b600);white-space:nowrap">&lt; 2 — utenfor skala</div>
-        <div style="flex:1;height:5px;background:var(--b800);border-radius:3px;overflow:hidden">
-          <div style="height:100%;width:${pbsT}%;background:rgba(148,163,184,.35);border-radius:3px"></div>
-        </div>
-        <div style="font-family:'JetBrains Mono',monospace;font-size:.75rem;
-          color:var(--b500);white-space:nowrap">
-          <span style="color:var(--b400)">♂</span>${bsG}
-          <span style="color:#c084fc;margin-left:.4rem">♀</span>${bsJ}
-          <span style="color:var(--b600);margin-left:.5rem">|</span>
-          <span style="color:var(--b500);margin-left:.4rem">${bsT} (${pbsT}%)</span>
-        </div>
-      </div>`;
-    }
+
   });
 
   html += '</div>';
