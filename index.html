@@ -1044,7 +1044,7 @@ function renderKlasse(){
         Vis karakterer
       </label>
     </div>
-    <div id="kt-student-table">${buildKTStudentTable(periods,students,_defPer,false,kull)}</div>
+    <div id="kt-student-table" style="overflow-x:auto">${buildKTStudentTable(periods,students,_defPer,false,kull)}</div>
     ${buildKT(periods,students,kull==='__alle__',kull)}
   </div>
   <div id="kt-grafer" class="tc"><div class="charts-grid" id="k-charts"></div></div>
@@ -4776,7 +4776,7 @@ function buildKTStudentTable(periods, students, selectedPer, showGrades, kullCtx
 
     h+=`<tr>
       <td style="color:var(--b600);font-family:'JetBrains Mono',monospace;font-size:.72rem">${s.nr||'—'}</td>
-      <td style="font-weight:500;cursor:pointer" onclick="(()=>{const k=_sk||'';if(k)navToIndivid(k,s.navn);})()" title="Åpne individprofil">${s.navn}${s._kull?` <span class="badge" style="font-size:.6rem">${s._kull}</span>`:''}${lblBadge} <span style="font-size:.65rem;color:var(--b600);margin-left:.2rem">↗</span></td>
+      <td style="font-weight:500;cursor:pointer" onclick="navToIndivid('${(_sk||'').replace(/'/g,String.fromCharCode(39))}','${s.navn.replace(/'/g,String.fromCharCode(39))}')" title="Åpne individprofil — ${s.navn}">${s.navn}${s._kull?` <span class="badge" style="font-size:.6rem">${s._kull}</span>`:''}${lblBadge} <span style="font-size:.65rem;color:var(--b600);margin-left:.2rem">↗</span></td>
       <td>${kj}</td>
       <td>${d.Beep||'<span class="ve">—</span>'}</td>
       ${showGrades?`<td style="text-align:center">${karCell(gBeep)}</td>`:''}
@@ -4789,10 +4789,13 @@ function buildKTStudentTable(periods, students, selectedPer, showGrades, kullCtx
       <td>${benkCell}</td>
       <td>${(()=>{
         const pu = d.Hangup, st = d.HangupStrikk;
-        const parts = [];
-        if(pu && pu!=='') parts.push(`Pull-up: ${pu}`);
-        if(st && st!=='') parts.push(`m/strikk: ${st}`);
-        return parts.length ? parts.join(' | ') : '<span class="ve">—</span>';
+        if(s.kjønn==='G') {
+          return pu&&pu!=='' ? pu+' reps' : '<span class="ve">—</span>';
+        }
+        const parts=[];
+        if(pu&&pu!=='') parts.push(pu+' reps');
+        if(st&&st!=='') parts.push(st+' m/strikk');
+        return parts.length ? parts.join(', ') : '<span class="ve">—</span>';
       })()}</td>
       ${showGrades?`<td style="text-align:center">${(()=>{
         if(!gPU2) return '<span style="color:var(--muted);font-size:.7rem">—</span>';
@@ -4925,6 +4928,8 @@ function renderKarakterfordeling() {
           else if(t.key==='Lop3000') hasResult = !!(pd.Løp && pd.LøpTest==='3000m');
           else if(t.key==='Stillelengde') hasResult = !!(pd.Stillelengde && pd.Stillelengde!=='');
           else if(t.key==='40m') hasResult = !!(pd['40-meter'] && pd['40-meter']!=='');
+          else if(t.key==='Pullup') hasResult = !!(pd.Hangup && pd.Hangup!=='') || !!(pd.HangupStrikk && pd.HangupStrikk!=='');
+          else if(t.key==='Strikk') hasResult = !!(pd.HangupStrikk && pd.HangupStrikk!=='');
           if(!hasResult) return;
           const g = t.grade(pd,kj,vg,kull,per);
           const sg = gradeToSimple(g);
