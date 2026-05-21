@@ -36,8 +36,9 @@ body{-webkit-text-size-adjust:100%;text-size-adjust:100%;background:var(--bg);co
 .home-title{font-size:clamp(2.2rem,5.5vw,4rem);font-weight:800;letter-spacing:-1.5px;text-align:center;line-height:1.05;position:relative;z-index:1;margin-bottom:.4rem}
 .home-title span{color:var(--b300)}
 .home-sub{color:var(--b200);font-family:'JetBrains Mono',monospace;font-size:.78rem;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:3rem;position:relative;z-index:1;opacity:.75}
-.home-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;max-width:940px;width:100%;position:relative;z-index:1;margin-bottom:1.2rem}
-.home-cards-2{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;max-width:940px;width:100%;position:relative;z-index:1}
+.home-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem;max-width:940px;width:100%;position:relative;z-index:1}
+.home-bottom-row{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+.home-stat-card{background:linear-gradient(145deg,var(--b800),var(--b900));border:1px solid var(--b700);border-radius:18px;padding:1.4rem 1.6rem}
 @media(max-width:700px){.home-cards,.home-cards-2{grid-template-columns:1fr}.ptc{padding:1rem}.profile-grid{grid-template-columns:1fr!important}.tperiods{flex-wrap:wrap}.hof-row{flex-wrap:wrap}.hof-nm{min-width:120px}}
 .home-card{background:linear-gradient(145deg,var(--b750),var(--b800));border:1px solid var(--b600);border-radius:18px;padding:1.8rem 1.6rem;cursor:pointer;transition:all .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;gap:.9rem;position:relative;overflow:hidden}
 .home-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:18px 18px 0 0;background:var(--b400);opacity:0;transition:opacity .28s}
@@ -83,6 +84,7 @@ tbody tr{border-bottom:1px solid rgba(22,48,96,.6);transition:background .15s}
 tbody tr:last-child{border-bottom:none}
 tbody tr:hover{background:rgba(96,150,232,.05)}
 tbody td{padding:.7rem 1rem;white-space:nowrap;color:var(--b100)}
+.th-nav{cursor:pointer;user-select:none}.th-nav:hover{color:var(--b100);text-decoration:underline dotted}
 .ve{color:var(--b700);font-family:'JetBrains Mono',monospace}
 .tabs{display:flex;gap:.25rem;margin-bottom:1.5rem;border-bottom:1px solid var(--b700)}
 .tab{padding:.6rem 1.2rem;background:none;border:none;color:var(--b200);font-family:'Outfit',sans-serif;font-size:.88rem;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s}
@@ -308,7 +310,8 @@ tbody td{padding:.7rem 1rem;white-space:nowrap;color:var(--b100)}
   <div class="home-title">Test<span>Tracker</span></div>
   <div class="home-sub">Øvrebyen · Idrettsfag · Fysisk testing</div>
   <div style="color:var(--b400);font-size:.8rem;max-width:520px;text-align:center;line-height:1.6;margin-bottom:.2rem;margin-top:.3rem">Registrer og følg fysiske testresultater for idrettselever ved Øvrebyen VGS. Beep, løp, styrke og hopptest — samlet og sammenlignbart på tvers av kull og år.</div>
-  <div class="home-cards">
+  <div class="home-grid">
+    <!-- Row 1: Primary views -->
     <div class="home-card" onclick="showPage('klasse')">
       <div class="card-icon">📊</div><div class="card-title">Klassestatistikk</div>
       <div class="card-desc">Snittresultater per kull og periode. Filtrer på kjønn. Vis alle kull samlet.</div>
@@ -316,38 +319,15 @@ tbody td{padding:.7rem 1rem;white-space:nowrap;color:var(--b100)}
     </div>
     <div class="home-card" onclick="showPage('individ')">
       <div class="card-icon">🏃</div><div class="card-title">Individstatistikk</div>
-      <div class="card-desc">Velg kull og elev for å se resultater, trend og grafisk utvikling over tid.</div>
+      <div class="card-desc">Velg elev for å se resultater, trend og grafisk utvikling over tid.</div>
       <div class="card-arrow">→ Finn utøver</div>
     </div>
     <div class="home-card" onclick="showPage('testdager')">
-      <div class="card-icon">📅</div>
-      <div class="card-title">Testdagene</div>
-      <div class="card-desc">Deltakelse og medaljer per testdag, Vår 2023–Vår 2026. Se hvem som presterte best per kull og kjønn.</div>
+      <div class="card-icon">📅</div><div class="card-title">Testdagene</div>
+      <div class="card-desc">Deltakelse og medaljer per testdag, Vår 2023–Vår 2026. Se hvem som presterte best.</div>
       <div class="card-arrow">→ Se testdager</div>
     </div>
-    <div class="home-card" onclick="showPage('reg');setTimeout(()=>switchRegTab('kull'),80)">
-      <div class="card-icon">➕</div><div class="card-title">Legg til kull</div>
-      <div class="card-desc">Opprett nytt kull og registrer elever direkte i nettleseren.</div>
-      <div class="card-arrow">→ Opprett kull</div>
-    </div>
-    <!-- Årets fremgang + GOAT combined section -->
-    <div id="home-bottom-wrap" style="max-width:940px;width:100%;position:relative;z-index:1;margin-top:.5rem">
-      <!-- Fremgang section -->
-      <div id="home-fremgang-wrap">
-        <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.7rem">
-          <span style="font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--b500);
-            letter-spacing:2.5px;text-transform:uppercase">🚀 Årets fremgang</span>
-          <div style="flex:1;height:1px;background:var(--b700)"></div>
-        </div>
-        <div id="home-fremgang"></div>
-      </div>
-      <!-- GOAT bar — always last on screen -->
-      <div id="home-goat-wrap" style="margin-top:1.2rem">
-        <div id="home-goat"></div>
-      </div>
-    </div>
-  </div>
-  <div class="home-cards-2">
+    <!-- Row 2: Admin -->
     <div class="home-card gold-card" onclick="showPage('hof')">
       <div class="card-icon" style="background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.25)">🏆</div>
       <div class="card-title">Hall of Fame</div>
@@ -356,8 +336,27 @@ tbody td{padding:.7rem 1rem;white-space:nowrap;color:var(--b100)}
     </div>
     <div class="home-card" onclick="showPage('reg')">
       <div class="card-icon">✏️</div><div class="card-title">Registrer resultater</div>
-      <div class="card-desc">Legg inn testresultater for alle kull inkl. fremtidige perioder.</div>
+      <div class="card-desc">Legg inn testresultater, administrer kull, faggrupper og inaktive elever.</div>
       <div class="card-arrow">→ Registrer</div>
+    </div>
+    <div class="home-card" onclick="showPage('reg');setTimeout(()=>switchRegTab('kull'),80)">
+      <div class="card-icon">➕</div><div class="card-title">Legg til kull</div>
+      <div class="card-desc">Opprett nytt kull og registrer elever direkte i nettleseren.</div>
+      <div class="card-arrow">→ Opprett kull</div>
+    </div>
+    <!-- Row 3: Stats (spans full width, split 2 cols internally) -->
+    <div class="home-bottom-row">
+      <div class="home-stat-card" id="home-fremgang-wrap">
+        <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.7rem">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--b500);
+            letter-spacing:2.5px;text-transform:uppercase">🚀 Årets fremgang</span>
+          <div style="flex:1;height:1px;background:var(--b700)"></div>
+        </div>
+        <div id="home-fremgang"></div>
+      </div>
+      <div class="home-stat-card" id="home-goat-wrap">
+        <div id="home-goat"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -455,6 +454,15 @@ tbody td{padding:.7rem 1rem;white-space:nowrap;color:var(--b100)}
     <div class="page-heading">Individ<span>statistikk</span></div>
   </div>
   <div class="controls">
+    <!-- Global name search -->
+    <div class="ctrl-group">
+      <div class="ctrl-label">Søk alle elever</div>
+      <select id="i-global" onchange="onIGlobal()" style="min-width:200px">
+        <option value="">— Søk på navn —</option>
+      </select>
+    </div>
+    <div style="display:flex;align-items:center;padding:0 .3rem;color:var(--b600);font-size:.75rem;align-self:flex-end;margin-bottom:.4rem">eller</div>
+    <!-- Kull → Elev flow -->
     <div class="ctrl-group">
       <div class="ctrl-label">Kull</div>
       <select id="i-kull" onchange="onIKull()"><option value="">— Velg kull —</option></select>
@@ -906,6 +914,7 @@ function sP(p){return p.replace('Høst ','H ').replace('Vår ','V ')}
 function showPage(n){
   window._currentPage = n;
   setTimeout(()=>renderBreadcrumb(n), 0);
+  if(n==='individ') setTimeout(initIGlobal, 50);
   document.querySelectorAll('[id^="page-"]').forEach(e=>{e.style.display='none';e.classList.remove('active')});
   const pg=document.getElementById('page-'+n);
   if(pg){pg.style.display=n==='home'?'flex':'block';pg.classList.add('active')}
@@ -1296,6 +1305,9 @@ function renderIndivid(){
     </div>` : '';
   }
 
+
+    if(cmpSummaryHtml) h = cmpSummaryHtml + h;
+  cont.innerHTML=h;
   // ── Tillegg 1: Participation header ────────────────────────────────
   (()=>{
     const REAL = ['Beep','Løp','Stillelengde','40-meter','Benk','Hangup','HangupStrikk'];
@@ -1394,8 +1406,6 @@ function renderIndivid(){
       ].join('');
   })();
 
-    if(cmpSummaryHtml) h = cmpSummaryHtml + h;
-  cont.innerHTML=h;
   const cc=document.getElementById(`ic_${navn.replace(/\W/g,'_')}`);
   ['Beep','Løp','Stillelengde','40-meter','Benk','Pull-up','Kroppshev i bom'].forEach((t,ti)=>{
     const vals=periods.map(p=>{
@@ -4671,13 +4681,13 @@ function buildKTStudentTable(periods, students, selectedPer, showGrades, kullCtx
   let h = `<div class="tw"><table>
     <thead><tr>
       <th>#</th><th>Elev</th><th>K</th>
-      <th>Beep</th>${showGrades?'<th style="font-size:.7rem;color:#facc15">Kar.</th>':''}
-      <th>Løp</th>${showGrades?'<th style="font-size:.7rem;color:#facc15">Kar.</th>':''}
-      <th>Stil.</th>${showGrades?'<th style="font-size:.7rem;color:#facc15">Kar.</th>':''}
-      <th>40m</th>${showGrades?'<th style="font-size:.7rem;color:#facc15">Kar.</th>':''}
+      <th class="th-nav" onclick="navToOevelse('Beep',null,document.getElementById('kt-per-sel')?.value||'')" title="Filtrer på Beep">Beep</th>${showGrades?'<th style="font-size:.7rem;color:#facc15">Kar.</th>':''}
+      <th class="th-nav" onclick="navToOevelse('Løp',null,document.getElementById('kt-per-sel')?.value||'')" title="Filtrer på Løp">Løp</th>${showGrades?'<th style="font-size:.7rem;color:#facc15">Kar.</th>':''}
+      <th class="th-nav" onclick="navToOevelse('Stil.',null,document.getElementById('kt-per-sel')?.value||'')" title="Filtrer på Stillelengde">Stil.</th>${showGrades?'<th style="font-size:.7rem;color:#facc15">Kar.</th>':''}
+      <th class="th-nav" onclick="navToOevelse('40m',null,document.getElementById('kt-per-sel')?.value||'')" title="Filtrer på 40m">40m</th>${showGrades?'<th style="font-size:.7rem;color:#facc15">Kar.</th>':''}
       <th>Benk</th>
-      <th>Pull-up</th>${showGrades?'<th style="font-size:.7rem;color:#facc15">Kar.</th>':''}
-      <th>H.strikk</th>
+      <th class="th-nav" onclick="navToOevelse('Pull-up',null,document.getElementById('kt-per-sel')?.value||'')" title="Filtrer på Pull-up">Pull-up</th>${showGrades?'<th style="font-size:.7rem;color:#facc15">Kar.</th>':''}
+      <th class="th-nav" onclick="navToOevelse('H.strikk',null,document.getElementById('kt-per-sel')?.value||'')" title="Filtrer på Pull-up m/strikk">H.strikk</th>
       <th>Periode</th>
       ${showGrades?'<th style="font-size:.7rem;color:#facc15;border-left:2px solid rgba(251,191,36,.3)">Snitt kar.</th>':''}
     </tr></thead><tbody>`;
@@ -5156,19 +5166,20 @@ function renderBreadcrumb(pageId) {
 
 function navToIndivid(kull, navn) {
   showPage('individ');
+  // Set kull selector
   const kullSel = document.getElementById('i-kull');
   if(!kullSel) return;
   kullSel.value = kull;
-  // trigger kull change to populate student dropdown
-  kullSel.dispatchEvent(new Event('change'));
-  // set student after dropdown populates
+  // Populate elev dropdown for this kull
+  fillIElev(kull);
+  // Set elev and render
   setTimeout(() => {
-    const navnSel = document.getElementById('i-navn');
-    if(navnSel) {
-      navnSel.value = navn;
-      navnSel.dispatchEvent(new Event('change'));
+    const elevSel = document.getElementById('i-elev');
+    if(elevSel) {
+      elevSel.value = navn;
+      renderIndivid();
     }
-  }, 80);
+  }, 50);
 }
 
 function fillICmpPer(kull, navn) {
@@ -5264,6 +5275,112 @@ function showRExisting() {
   el.innerHTML = existing
     ? '📋 Nåværende: <strong style="color:var(--b100)">'+existing+'</strong>'
     : '<span style="color:var(--b600)">Ingen registrert verdi for denne øvelsen</span>';
+}
+
+function initIGlobal() {
+  const sel = document.getElementById('i-global');
+  if(!sel || sel.options.length > 1) return;  // already populated
+  // Collect all students across all kulls
+  const all = [];
+  Object.keys(allKD()).forEach(kull => {
+    const kd = getMD(kull);
+    Object.values(kd.students).forEach(s => {
+      const parts = s.navn.split(' ');
+      const etternavn = parts[parts.length-1];
+      const fornavn = parts.slice(0,-1).join(' ');
+      all.push({
+        kull, navn: s.navn, etternavn, fornavn,
+        display: etternavn + ', ' + fornavn + ' (' + kull + ')',
+        sortKey: etternavn.toLowerCase() + fornavn.toLowerCase()
+      });
+    });
+  });
+  all.sort((a,b) => a.sortKey.localeCompare(b.sortKey, 'no'));
+  all.forEach(({kull, navn, display}) => {
+    const o = document.createElement('option');
+    o.value = kull + '::' + navn;
+    o.textContent = display;
+    sel.appendChild(o);
+  });
+}
+
+function onIGlobal() {
+  const val = document.getElementById('i-global')?.value;
+  if(!val) return;
+  const [kull, navn] = val.split('::');
+  if(!kull || !navn) return;
+  // Set kull selector
+  const kullSel = document.getElementById('i-kull');
+  if(kullSel) kullSel.value = kull;
+  // Populate elev list for this kull
+  fillIElev(kull);
+  // Set elev selector
+  const elevSel = document.getElementById('i-elev');
+  if(elevSel) elevSel.value = navn;
+  // Render
+  renderIndivid();
+}
+
+// ── Navigate to Øvelse tab filtered on a specific test ───────────────
+// Mapping from column display name → OEV_DEFS key
+const COL_TO_OEV = {
+  'Beep':       'Beep',
+  'Løp':        'Lop3000',   // default to 3000m; refined below
+  'Stil.':      'Stillelengde',
+  'Stillelengde':'Stillelengde',
+  '40m':        '40m',
+  '40-meter':   '40m',
+  'Benk':       'Benk',
+  'Pull-up':    'Pullups',
+  'H.strikk':   'Strikk',
+  'Pull-up m/strikk': 'Strikk',
+};
+
+function navToOevelse(colLabel, kjønn, per) {
+  // Determine OEV key
+  let oevKey = COL_TO_OEV[colLabel];
+  if(!oevKey) return;
+
+  // Refine Løp: check LøpTest from current period context if possible
+  // (use current kull's students to infer 2000m vs 3000m)
+  if(colLabel === 'Løp') {
+    const kull = document.getElementById('k-kull')?.value;
+    if(kull && kull !== '__alle__') {
+      const kd = getMD(kull);
+      // Check if any student in this period uses 2000m
+      const uses2000 = Object.values(kd.students).some(s =>
+        s.perioder?.[per]?.LøpTest === '2000m' && s.perioder?.[per]?.Løp
+      );
+      oevKey = uses2000 ? 'Lop2000' : 'Lop3000';
+    }
+  }
+
+  // Determine VG from period
+  const vgM = per ? per.match(/VG(\d)/) : null;
+  const vg = vgM ? 'VG' + vgM[1] : 'alle';
+
+  // Map kjønn to filter
+  const kjFilter = kjønn === 'G' ? 'G' : kjønn === 'J' ? 'J' : 'alle';
+
+  // Set state and switch tab
+  _oevState.oev     = oevKey;
+  _oevState.kj      = kjFilter;
+  _oevState.vg      = vg;
+  _oevState.sesong  = per && per.startsWith('Vår') ? 'Vår'
+                    : per && per.startsWith('Høst') ? 'Høst' : 'alle';
+
+  // Update dropdowns to reflect new state
+  const oevSel  = document.getElementById('oev-f-oev');
+  const kjSel   = document.getElementById('oev-f-kj');
+  const vgSel   = document.getElementById('oev-f-vg');
+  const sesSel  = document.getElementById('oev-f-sesong');
+  if(oevSel)  oevSel.value  = oevKey;
+  if(kjSel)   kjSel.value   = kjFilter;
+  if(vgSel)   vgSel.value   = vg;
+  if(sesSel)  sesSel.value  = _oevState.sesong;
+
+  // Switch to Øvelse tab
+  switchKTab('oevelse');
 }
 showPage('home');
 </script>
