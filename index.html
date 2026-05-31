@@ -135,7 +135,7 @@ body{background:var(--bg);color:var(--t0);font-family:var(--sans);font-size:16px
   <div class="tb-logo"><div class="tb-dot"></div>Øvrebyen Idrettsfag &nbsp;<strong>TestTracker</strong></div>
   <div class="tb-r">
     <button class="tb-btn" id="cmp-btn" onclick="toggleCmp()">⇄ Sammenlign</button>
-    <button class="tb-btn accent" onclick="location.href='testtracker.html'">Fullversjon →</button>
+    <button class="tb-btn accent" onclick="location.href=location.href.replace(/[^\/]*$/, 'testtracker.html')" title="Åpne fullversjon av TestTracker">Fullversjon →</button>
   </div>
 </header>
 <aside class="sb">
@@ -155,7 +155,7 @@ body{background:var(--bg);color:var(--t0);font-family:var(--sans);font-size:16px
     </div></div>
     <div class="il" id="indiv-list"></div>
   </div>
-  <a class="sb-admin" onclick="location.href='testtracker.html'">
+  <a class="sb-admin" onclick="location.href=location.href.replace(/[^\/]*$/, 'testtracker.html')">
     <span style="opacity:.5">⚙</span> Registrer / administrer
   </a>
 </aside>
@@ -257,6 +257,10 @@ const KAR_PU = {
           18:'6-',19:'6-', _top:20},
   }
 };
+// Jenter m/strikk = same scale as gutter
+KAR_PU.J_STRIKK = KAR_PU.G;
+// Jenter uten strikk (Vår 2026+)
+KAR_PU.J_UTEN = {1:'5-',2:'5',3:'5+',4:'6-', _top:5};
 
 function _bt2(s){const mo=String(s).match(/^(\d+)\.(\d+)$/);if(!mo)return null;const lv=+mo[1],sh=+mo[2];if(sh<1||sh>BS2[lv])return null;let t=0;for(let l=1;l<lv;l++)t+=BS2[l]||0;return t+sh;}
 
