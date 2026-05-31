@@ -559,21 +559,26 @@ function renderTable(){
       <th class="r">Beep</th><th class="r">Løp</th><th class="r">Stille</th>
       <th class="r">40m</th><th class="r">Benk</th><th class="r">Pull-up</th><th>Kar.</th></tr>`;
   } else {
-    thead.innerHTML=`<tr>
-      <th style="width:28px">#</th><th>Elev</th>
-      <th class="r" colspan="2" style="text-align:center">Beep</th>
-      <th class="r" colspan="2" style="text-align:center">Løp</th>
-      <th class="r" colspan="2" style="text-align:center">Stille</th>
-      <th class="r" colspan="2" style="text-align:center">40m</th>
-      <th class="r" colspan="2" style="text-align:center">Benk</th>
-      <th class="r" colspan="2" style="text-align:center">Pull-up</th>
-      <th>Kar.</th></tr>
-    <tr style="background:var(--s1)">
-      <th colspan="2"></th>
-      ${['Beep','Løp','Stille','40m','Benk','Pull-up'].map(()=>`
-        <th class="r" style="color:var(--t2);font-size:9.5px">${cmpPer.slice(0,4)}</th>
-        <th class="r" style="color:var(--t0);font-size:9.5px">${curPer.slice(0,4)}</th>`).join('')}
-      <th></th></tr>`;
+    // cmpPer = older (left, dimmed), curPer = newer (right, bright)
+    const tests = ['Beep','Løp','Stille','40m','Benk','Pull-up'];
+    // Row 1: # Elev | test×colspan2 each | Kar  → 1+1 + 6×2 + 1 = 15
+    // Row 2: blank×2 | per-label per test × 6 | blank×1 → 2 + 12 + 1 = 15
+    const row1 = `<tr>
+      <th style="width:28px">#</th>
+      <th>Elev</th>
+      ${tests.map(t=>`<th colspan="2" style="text-align:center;font-size:11px;color:var(--t1);
+          border-bottom:2px solid var(--line2);padding-bottom:4px">${t}</th>`).join('')}
+      <th>Kar.</th></tr>`;
+    const row2 = `<tr style="background:var(--s2)">
+      <th colspan="2" style="border-bottom:1px solid var(--line)"></th>
+      ${tests.map(()=>`
+        <th class="r" style="color:var(--t2);font-size:10px;font-weight:400;
+            border-bottom:1px solid var(--line);padding:4px 10px 4px 0">${cmpPer}</th>
+        <th class="r" style="color:var(--t0);font-size:10px;font-weight:600;
+            border-bottom:1px solid var(--line);border-left:1px solid var(--line2);
+            padding:4px 10px 4px 6px">${curPer}</th>`).join('')}
+      <th style="border-bottom:1px solid var(--line)"></th></tr>`;
+    thead.innerHTML = row1 + row2;
   }
 
   // Build rows
