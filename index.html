@@ -79,8 +79,9 @@ body{background:var(--bg);color:var(--t0);font-family:var(--sans);font-size:16px
 .miss-ok{font-family:var(--mono);font-size:11px;color:var(--up)}
 .tbl-area{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--line) transparent}
 .rt{width:100%;border-collapse:collapse}
-.rt thead th{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--t2);padding:9px 10px;text-align:left;border-bottom:1px solid var(--line);background:var(--bg);position:sticky;top:0;z-index:2;white-space:nowrap;cursor:default}
+.rt thead th{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--t2);padding:10px 10px 8px;text-align:left;border-bottom:2px solid var(--line2);background:var(--bg);position:sticky;top:0;z-index:2;white-space:nowrap;cursor:default}
 .rt thead th.r{text-align:right}
+.rt thead tr:last-child th{font-size:9.5px;padding:5px 10px 6px;border-bottom:1px solid var(--line)}
 .rt tbody tr{border-bottom:1px solid var(--line2);cursor:pointer;transition:background .08s}
 .rt tbody tr:hover{background:var(--s2)}
 .rt tbody tr.on{background:var(--s3)}
@@ -135,7 +136,7 @@ body{background:var(--bg);color:var(--t0);font-family:var(--sans);font-size:16px
   <div class="tb-logo"><div class="tb-dot"></div>Øvrebyen Idrettsfag &nbsp;<strong>TestTracker</strong></div>
   <div class="tb-r">
     <button class="tb-btn" id="cmp-btn" onclick="toggleCmp()">⇄ Sammenlign</button>
-    <button class="tb-btn accent" onclick="location.href='testtracker.html'">Fullversjon →</button>
+    <a href="testtracker.html" class="tb-btn accent" style="text-decoration:none">Fullversjon →</a>
   </div>
 </header>
 <aside class="sb">
@@ -155,7 +156,7 @@ body{background:var(--bg);color:var(--t0);font-family:var(--sans);font-size:16px
     </div></div>
     <div class="il" id="indiv-list"></div>
   </div>
-  <a class="sb-admin" onclick="location.href='testtracker.html'">
+  <a href="testtracker.html" class="sb-admin">
     <span style="opacity:.5">⚙</span> Registrer / administrer
   </a>
 </aside>
@@ -602,16 +603,21 @@ function renderTable(){
     const stil=pd.Stillelengde?parseFloat(pd.Stillelengde).toFixed(2):'';
     const f40=pd['40-meter']||'';
     const benk=pd.Benk?(pd.Benk+(pd.BenkKg?'@'+pd.BenkKg:'')):'';
-    // Hangups: unify all variants into one display value
+    // Hangups: number prominent, label below in small muted text
     const pu=(()=>{
-      const parts=[];
+      const lines=[];
       if(pd.Hangup&&pd.Hangup!==''&&pd.Hangup!=='0')
-        parts.push(pd.Hangup+(pd.HangupStrikk?'':'')); // plain pull-up
+        lines.push({n:pd.Hangup, lbl:pd.HangupStrikk?'':''});
       if(pd.HangupStrikk&&pd.HangupStrikk!=='')
-        parts.push(pd.HangupStrikk+' <span style="font-size:11px;color:var(--t2)">(m/strikk)</span>');
+        lines.push({n:pd.HangupStrikk, lbl:'m/strikk'});
       if(pd.Kroppshev&&pd.Kroppshev!==''&&pd.Kroppshev!=='0')
-        parts.push(pd.Kroppshev+' <span style="font-size:11px;color:var(--t2)">(liggende ro)</span>');
-      return parts.join(' · ');
+        lines.push({n:pd.Kroppshev, lbl:'liggende ro'});
+      if(!lines.length) return '';
+      return lines.map(({n,lbl})=>
+        lbl
+          ? `<span style="line-height:1.1">${n}<br><span style="font-size:10px;font-weight:400;color:var(--t2);font-family:var(--sans)">${lbl}</span></span>`
+          : n
+      ).join('<span style="color:var(--t3);margin:0 3px">·</span>');
     })();
     const gAvg=computeGrade(pd,kj,curKull,curPer);
 
@@ -643,7 +649,7 @@ function renderTable(){
         <td class="r">${stil||dash()}</td>
         <td class="r">${f40||dash()}</td>
         <td class="r">${benk||dash()}</td>
-        <td class="r" style="text-align:left;padding-right:6px">${pu||dash()}</td>
+        <td class="r" style="text-align:left;padding-right:6px;vertical-align:middle;line-height:1.3">${pu||dash()}</td>
         <td>${gradeCell(gAvg)}</td>`;
     } else {
       const cpd2=hasCmp?s.perioder?.[cmpPer]||{}:{};
