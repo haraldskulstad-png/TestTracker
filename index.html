@@ -122,8 +122,8 @@ body{background:var(--bg);color:var(--t0);font-family:var(--sans);font-size:16px
 .p-pt.on{background:var(--s3);border-color:var(--line2);color:var(--t0)}
 .overlay{display:none;position:fixed;inset:52px 0 0 0;background:rgba(0,0,0,.35);z-index:15;backdrop-filter:blur(1px)}
 .overlay.on{display:block}
-@keyframes fu{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
-.rt tbody tr{animation:fu .16s both}
+@keyframes fu{from{opacity:0}to{opacity:1}}
+.rt tbody tr{animation:fu .2s ease forwards}
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--line2);border-radius:2px}
@@ -135,7 +135,7 @@ body{background:var(--bg);color:var(--t0);font-family:var(--sans);font-size:16px
   <div class="tb-logo"><div class="tb-dot"></div>Øvrebyen Idrettsfag &nbsp;<strong>TestTracker</strong></div>
   <div class="tb-r">
     <button class="tb-btn" id="cmp-btn" onclick="toggleCmp()">⇄ Sammenlign</button>
-    <button class="tb-btn accent" onclick="location.href=location.href.replace(/[^\/]*$/, 'testtracker.html')" title="Åpne fullversjon av TestTracker">Fullversjon →</button>
+    <button class="tb-btn accent" onclick="location.href='testtracker.html'">Fullversjon →</button>
   </div>
 </header>
 <aside class="sb">
@@ -155,7 +155,7 @@ body{background:var(--bg);color:var(--t0);font-family:var(--sans);font-size:16px
     </div></div>
     <div class="il" id="indiv-list"></div>
   </div>
-  <a class="sb-admin" onclick="location.href=location.href.replace(/[^\/]*$/, 'testtracker.html')">
+  <a class="sb-admin" onclick="location.href='testtracker.html'">
     <span style="opacity:.5">⚙</span> Registrer / administrer
   </a>
 </aside>
@@ -561,10 +561,10 @@ function renderTable(){
     thead.innerHTML=`<tr>
       <th style="width:28px">#</th><th>Elev</th>
       <th class="r">Beep</th><th class="r">Løp</th><th class="r">Stille</th>
-      <th class="r">40m</th><th class="r">Benk</th><th class="r">Pull-up</th><th>Kar.</th></tr>`;
+      <th class="r">40m</th><th class="r">Benk</th><th class="r">Hangups</th><th>Kar.</th></tr>`;
   } else {
     // cmpPer = older (left, dimmed), curPer = newer (right, bright)
-    const tests = ['Beep','Løp','Stille','40m','Benk','Pull-up'];
+    const tests = ['Beep','Løp','Stille','40m','Benk','Hangups'];
     // Row 1: # Elev | test×colspan2 each | Kar  → 1+1 + 6×2 + 1 = 15
     // Row 2: blank×2 | per-label per test × 6 | blank×1 → 2 + 12 + 1 = 15
     const row1 = `<tr>
@@ -602,8 +602,17 @@ function renderTable(){
     const stil=pd.Stillelengde?parseFloat(pd.Stillelengde).toFixed(2):'';
     const f40=pd['40-meter']||'';
     const benk=pd.Benk?(pd.Benk+(pd.BenkKg?'@'+pd.BenkKg:'')):'';
-    const pu=kj==='G'?(pd.Hangup||''):
-      [pd.Hangup?pd.Hangup+' pu':'',pd.HangupStrikk?pd.HangupStrikk+' s':''].filter(Boolean).join('/');
+    // Hangups: unify all variants into one display value
+    const pu=(()=>{
+      const parts=[];
+      if(pd.Hangup&&pd.Hangup!==''&&pd.Hangup!=='0')
+        parts.push(pd.Hangup+(pd.HangupStrikk?'':'')); // plain pull-up
+      if(pd.HangupStrikk&&pd.HangupStrikk!=='')
+        parts.push(pd.HangupStrikk+' <span style="font-size:11px;color:var(--t2)">(m/strikk)</span>');
+      if(pd.Kroppshev&&pd.Kroppshev!==''&&pd.Kroppshev!=='0')
+        parts.push(pd.Kroppshev+' <span style="font-size:11px;color:var(--t2)">(liggende ro)</span>');
+      return parts.join(' · ');
+    })();
     const gAvg=computeGrade(pd,kj,curKull,curPer);
 
     if(beep)beeps.push(beepToTotal(beep)||0);
@@ -624,7 +633,7 @@ function renderTable(){
     }
 
     const tr=document.createElement('tr');
-    tr.style.animationDelay=`${Math.min(i*.018,.5)}s`;
+    // no animation delay - all rows visible immediately
     if(!hasCmp){
       tr.innerHTML=`
         <td class="r" style="color:var(--t2);font-size:12px">${i+1}</td>
@@ -634,7 +643,7 @@ function renderTable(){
         <td class="r">${stil||dash()}</td>
         <td class="r">${f40||dash()}</td>
         <td class="r">${benk||dash()}</td>
-        <td class="r">${pu||dash()}</td>
+        <td class="r" style="text-align:left;padding-right:6px">${pu||dash()}</td>
         <td>${gradeCell(gAvg)}</td>`;
     } else {
       const cpd2=hasCmp?s.perioder?.[cmpPer]||{}:{};
@@ -643,7 +652,7 @@ function renderTable(){
       tr.innerHTML=`
         <td class="r" style="color:var(--t2);font-size:12px">${i+1}</td>
         <td class="nm">${last}, ${first}<span class="kj">${kj==='G'?'♂':'♀'}</span></td>
-        ${pair(beep,cbeep,false)}${pair(pd.Løp,clop,true)}${pair(stil,cstil,false)}${pair(f40,cf40,true)}${pair(pd.Benk,cbenk,false)}${pair(pu,cpu,false)}
+        ${pair(beep,cbeep,false)}${pair(pd.Løp,clop,true)}${pair(stil,cstil,false)}${pair(f40,cf40,true)}${pair(pd.Benk,cbenk,false)}${pair(pd.Hangup||pd.Kroppshev||'',cpd2.Hangup||cpd2.Kroppshev||'',false)}
         <td>${gradeCell(gAvg)}</td>`;
     }
     tr.onclick=()=>openPanel(s,curKull,curPer,tr);
@@ -718,11 +727,13 @@ function buildPanelPer(s,kull,per,isActive){
   if(pd.Stillelengde)c+=row('📏','Stillelengde',parseFloat(pd.Stillelengde).toFixed(2)+'m',gS);
   if(pd['40-meter'])c+=row('⚡','40-meter',pd['40-meter']+'s',g4);
   if(pd.Benk)c+=row('💪','Benk',pd.Benk+(pd.BenkKg?' reps @ '+pd.BenkKg+'kg':' reps'),null);
-  if(kj==='G'&&pd.Hangup)c+=row('🔝','Pull-up',pd.Hangup+' reps',gP);
-  if(kj==='J'){
-    if(pd.Hangup)c+=row('🔝','Pull-up',pd.Hangup+' reps',null);
-    if(pd.HangupStrikk)c+=row('🔝','Pull-up m/strikk',pd.HangupStrikk+' reps',gP);
-  }
+  // Show all hangup variants present for this period
+  if(pd.Hangup&&pd.Hangup!==''&&pd.Hangup!=='0')
+    c+=row('🔝','Pull-up',pd.Hangup+' reps',gP);
+  if(pd.HangupStrikk&&pd.HangupStrikk!=='')
+    c+=row('🔝','Pull-up m/strikk',pd.HangupStrikk+' reps',gP);
+  if(pd.Kroppshev&&pd.Kroppshev!==''&&pd.Kroppshev!=='0')
+    c+=row('🔝','Liggende ro',pd.Kroppshev+' reps',null);
   if(!c)return '';
   return `<div class="p-sec" data-per="${per}">
     <div class="p-sec-title">${per}${gAvg?gradeCell(gAvg):''}</div>${c}</div>`;
