@@ -410,6 +410,18 @@ function isDNF(kull, navn) {
   return !!(d[kull] && d[kull].includes(navn));
 }
 
+function totalToBeep(total){
+  let cum=0;
+  for(let lv=1;lv<=21;lv++){const sh=BS[lv]||0;if(cum+sh>=total)return lv+'.'+(total-cum);cum+=sh;}
+  return String(total);
+}
+
+function beepAvg(vals){
+  const totals=vals.map(beepToTotal).filter(v=>v!==null);
+  if(!totals.length)return null;
+  return totalToBeep(Math.round(totals.reduce((a,b)=>a+b)/totals.length));
+}
+
 // ── Session overlay ──────────────────────────────────────────────────
 function loadSes(){try{return JSON.parse(localStorage.getItem(SESS_KEY)||'[]');}catch{return[];}}
 function applySession(d){
@@ -621,7 +633,7 @@ function renderTable(){
     })();
     const gAvg=computeGrade(pd,kj,curKull,curPer);
 
-    if(beep)beeps.push(beepToTotal(beep)||0);
+    if(beep)beeps.push(beep);
     if(pd.Løp&&pd.LøpTest==='3000m'){const[mm,ss]=pd.Løp.split(':');lops.push(parseInt(mm)*60+parseInt(ss));}
     if(f40)f40s.push(parseFloat(f40));
     if(gAvg)kars.push(gradeToNum(gAvg)||0);
@@ -668,7 +680,7 @@ function renderTable(){
   // Stats
   const N=students.length;
   document.getElementById('sn').textContent=N;
-  document.getElementById('sb_').textContent=beeps.length?(beeps.reduce((a,b)=>a+b)/beeps.length).toFixed(1):'—';
+  document.getElementById('sb_').textContent=beepAvg(beeps)||'—';
   if(lops.length){const a=Math.round(lops.reduce((a,b)=>a+b)/lops.length);document.getElementById('sl').textContent=`${Math.floor(a/60)}:${String(a%60).padStart(2,'0')}`;}
   else document.getElementById('sl').textContent='—';
   document.getElementById('sf40').textContent=f40s.length?(f40s.reduce((a,b)=>a+b)/f40s.length).toFixed(2):'—';
