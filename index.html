@@ -91,6 +91,11 @@ body{background:var(--bg);color:var(--t0);font-family:var(--sans);font-size:16px
 .rt tbody td{padding:11px 10px;color:var(--t1);white-space:nowrap;font-size:15px}
 .rt tbody td.nm{color:var(--t0);font-weight:600}
 .rt tbody td.r{font-family:var(--mono);font-size:14px;text-align:right;color:var(--t0)}
+.rt thead th.hg{text-align:center}
+.rt tbody td.hg{font-family:var(--mono);font-size:14px;text-align:center;color:var(--t0);vertical-align:middle;line-height:1.25}
+.hg-v{display:inline-block;text-align:center;vertical-align:middle;line-height:1.15}
+.hg-l{display:block;font-family:var(--sans);font-size:10px;font-weight:400;color:var(--t2);letter-spacing:.01em;margin-top:1px}
+.hg-sep{color:var(--t3);margin:0 5px;vertical-align:middle}
 .rt tbody td.miss{color:var(--t3);font-family:var(--mono);font-size:12px;border:none;padding:11px 10px}
 .kj{font-family:var(--mono);font-size:10px;color:var(--t2);margin-left:5px}
 .gr{display:inline-flex;align-items:center;justify-content:center;min-width:30px;height:22px;border-radius:5px;font-family:var(--mono);font-size:13px;font-weight:700;padding:0 5px}
@@ -582,7 +587,7 @@ function renderTable(){
     thead.innerHTML=`<tr>
       <th style="width:28px">#</th><th>Elev</th>
       <th class="r">Beep</th><th class="r">Løp</th><th class="r">Stille</th>
-      <th class="r">40m</th><th class="r">Benk</th><th class="r">Hangups</th>${showGrades?'<th>Kar.</th>':''}</tr>`;
+      <th class="r">40m</th><th class="r">Benk</th><th class="hg">Hangups</th>${showGrades?'<th>Kar.</th>':''}</tr>`;
   } else {
     // cmpPer = older (left, dimmed), curPer = newer (right, bright)
     const tests = ['Beep','Løp','Stille','40m','Benk','Hangups'];
@@ -634,10 +639,8 @@ function renderTable(){
         lines.push({n:pd.Kroppshev, lbl:'liggende ro'});
       if(!lines.length) return '';
       return lines.map(({n,lbl})=>
-        lbl
-          ? `<span style="line-height:1.1">${n}<br><span style="font-size:10px;font-weight:400;color:var(--t2);font-family:var(--sans)">${lbl}</span></span>`
-          : n
-      ).join('<span style="color:var(--t3);margin:0 3px">·</span>');
+        `<span class="hg-v">${n}${lbl?`<span class="hg-l">${lbl}</span>`:''}</span>`
+      ).join('<span class="hg-sep">·</span>');
     })();
     const gAvg=computeGrade(pd,kj,curKull,curPer);
 
@@ -669,7 +672,7 @@ function renderTable(){
         <td class="r">${stil||dash()}</td>
         <td class="r">${f40||dash()}</td>
         <td class="r">${benk||dash()}</td>
-        <td class="r" style="text-align:left;padding-right:6px;vertical-align:middle;line-height:1.3">${pu||dash()}</td>
+        <td class="hg">${pu||dash()}</td>
         ${showGrades?`<td>${gradeCell(gAvg)}</td>`:''}`;
     } else {
       const cpd2=hasCmp?s.perioder?.[cmpPer]||{}:{};
