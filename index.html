@@ -143,7 +143,7 @@ body{background:var(--bg);color:var(--t0);font-family:var(--sans);font-size:16px
 <header class="tb">
   <div class="tb-logo"><div class="tb-dot"></div>Øvrebyen Idrettsfag &nbsp;<strong>TestTracker</strong></div>
   <div class="tb-r">
-    <label class="tb-chk" title="Vis karakterkolonne"><input type="checkbox" id="grades-cb" onchange="renderTable()">Vis karakterer</label>
+    <label class="tb-chk" title="Vis karakterkolonne"><input type="checkbox" id="grades-cb" onchange="onGradesToggle()">Vis karakterer</label>
     <button class="tb-btn" id="cmp-btn" onclick="toggleCmp()">⇄ Sammenlign</button>
     <a href="testtracker.html" class="tb-btn accent" style="text-decoration:none">Fullversjon →</a>
   </div>
@@ -720,12 +720,20 @@ function openIndivid(kull,navn){
   document.getElementById('overlay').classList.add('on');
   document.querySelectorAll('.ii').forEach(el=>el.classList.toggle('on',el.querySelector('.ii-nm')?.textContent?.includes(navn.split(' ').pop())));
 }
+function onGradesToggle(){
+  renderTable();
+  if(panelCtx&&document.getElementById('panel').classList.contains('open'))
+    renderPanel(panelCtx.s,panelCtx.kull,panelCtx.per);
+}
 function closePanel(){
+  panelCtx=null;
   document.getElementById('panel').classList.remove('open');
   document.getElementById('overlay').classList.remove('on');
   if(selRow){selRow.classList.remove('on');selRow=null;}
 }
+let panelCtx=null;
 function renderPanel(s,kull,activePer){
+  panelCtx={s,kull,per:activePer};
   const parts=s.navn.split(' ');
   document.getElementById('p-nm').textContent=parts.pop()+', '+parts.join(' ');
   document.getElementById('p-mt').textContent=`Kull ${kull.replace('-','–')} · ${s.kjønn==='G'?'♂ Gutt':'♀ Jente'}`;
@@ -743,10 +751,13 @@ function renderPanel(s,kull,activePer){
 }
 function buildPanelPer(s,kull,per,isActive){
   const pd=s.perioder?.[per]||{};const kj=s.kjønn;const vg=karVG(per)||'VG3';
-  const gAvg=computeGrade(pd,kj,kull,per);
-  const gB=karBeep(pd.Beep,kj,vg),gL=pd.Løp&&pd.LøpTest==='3000m'?karLop3(pd.Løp,kj,vg):null,
-        gS=karStille(pd.Stillelengde,kj,vg),g4=kar40m(pd['40-meter'],kj,vg),
-        gP=karPullupFull(pd,kj,vg,kull,per);
+  const sg=!!document.getElementById('grades-cb')?.checked;
+  const gAvg=sg?computeGrade(pd,kj,kull,per):null;
+  const gB=sg?karBeep(pd.Beep,kj,vg):null,
+        gL=sg&&pd.Løp&&pd.LøpTest==='3000m'?karLop3(pd.Løp,kj,vg):null,
+        gS=sg?karStille(pd.Stillelengde,kj,vg):null,
+        g4=sg?kar40m(pd['40-meter'],kj,vg):null,
+        gP=sg?karPullupFull(pd,kj,vg,kull,per):null;
   const row=(ico,lbl,val,g)=>`<div class="p-row">
     <div class="p-test"><span class="p-ico">${ico}</span>${lbl}</div>
     <div class="p-val">${val?val:'<span class="p-empty">—</span>'}${g?gradeCell(g.grade||g):''}</div></div>`;
